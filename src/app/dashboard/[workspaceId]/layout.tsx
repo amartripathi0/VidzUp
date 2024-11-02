@@ -1,8 +1,18 @@
 import { getNotifications, onAuthenticateUser } from "@/actions/user";
-import { getAllUserVideos, getWorkspaceFolders, getWorkSpaces, verifyAccessToWorkspace } from "@/actions/workspace";
+import {
+  getAllUserVideos,
+  getWorkspaceFolders,
+  getWorkSpaces,
+  verifyAccessToWorkspace,
+} from "@/actions/workspace";
 import { redirect } from "next/navigation";
 import React, { ReactNode } from "react";
-import {QueryClient} from '@tanstack/react-query'
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import Sidebar from "@/components/global/sidebar";
 type Props = {
   params: {
     workspaceId: string;
@@ -16,15 +26,16 @@ export default async function Layout({ params: { workspaceId } }: Props) {
   if (!auth?.user?.workspace.length) return redirect("/auth/sign-in");
 
   const hasWorkspaceAccess = await verifyAccessToWorkspace(workspaceId);
-  if(hasWorkspaceAccess.status !== 200) return redirect(`/dashboard/${auth.user.workspace[0].id}`);
-  if(!hasWorkspaceAccess.data?.workspace) return null;
+  if (hasWorkspaceAccess.status !== 200)
+    return redirect(`/dashboard/${auth.user.workspace[0].id}`);
+  if (!hasWorkspaceAccess.data?.workspace) return null;
 
-  const query = new QueryClient()
-// prefetching and storing data in state
+  const query = new QueryClient();
+  // prefetching and storing data in state
   await query.prefetchQuery({
-    queryKey : ['workspace-folders'],
-    queryFn : () => getWorkspaceFolders(workspaceId)
-  })
+    queryKey: ["workspace-folders"],
+    queryFn: () => getWorkspaceFolders(workspaceId),
+  });
   await query.prefetchQuery({
     queryKey: ["user-videos"],
     queryFn: () => getAllUserVideos(workspaceId),
@@ -37,5 +48,11 @@ export default async function Layout({ params: { workspaceId } }: Props) {
     queryKey: ["user-notifications"],
     queryFn: () => getNotifications(),
   });
-  return <div>Layout</div>;
+  return (
+    <HydrationBoundary state={dehydrate(query)}>
+      <div className="flex h-screen w-screen">
+        <Sidebar activeWorkspaceId={workspaceId} />
+      </div>
+    </HydrationBoundary>
+  );
 }
