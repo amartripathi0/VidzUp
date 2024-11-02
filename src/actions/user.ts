@@ -66,4 +66,34 @@ export const onAuthenticateUser = async () => {
   }
 };
 
+export const getNotifications = async () => {
+  try {
+    const user = await currentUser();
 
+    if (!user) {
+      return { status: 403 };
+    }
+
+    const notifications  = await prisma.user.findUnique({
+      where : {
+        clerkid : user.id
+      },
+      select : {
+        notification : true,
+        _count : {
+          select : {
+            notification:true
+          }
+        }
+      }
+    })
+
+    if(notifications && notifications.notification.length >0) {
+      return {status : 200 , notifications}
+    }
+    return { status: 403, notifications : [] };
+  } catch (error) {
+        return { status: 403, notifications: [] };
+
+  }
+};

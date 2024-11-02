@@ -1,5 +1,5 @@
-import { onAuthenticateUser } from "@/actions/user";
-import { getWorkspaceFolders, verifyAccessToWorkspace } from "@/actions/workspace";
+import { getNotifications, onAuthenticateUser } from "@/actions/user";
+import { getAllUserVideos, getWorkspaceFolders, getWorkSpaces, verifyAccessToWorkspace } from "@/actions/workspace";
 import { redirect } from "next/navigation";
 import React, { ReactNode } from "react";
 import {QueryClient} from '@tanstack/react-query'
@@ -25,5 +25,17 @@ export default async function Layout({ params: { workspaceId } }: Props) {
     queryKey : ['workspace-folders'],
     queryFn : () => getWorkspaceFolders(workspaceId)
   })
+  await query.prefetchQuery({
+    queryKey: ["user-videos"],
+    queryFn: () => getAllUserVideos(workspaceId),
+  });
+  await query.prefetchQuery({
+    queryKey: ["user-workspaces"],
+    queryFn: () => getWorkSpaces(),
+  });
+  await query.prefetchQuery({
+    queryKey: ["user-notifications"],
+    queryFn: () => getNotifications(),
+  });
   return <div>Layout</div>;
 }
