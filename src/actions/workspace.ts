@@ -114,7 +114,7 @@ export const getWorkSpaces = async () => {
 
     if (!user) return { status: 404 };
 
-    const workspaces = await client.user.findUnique({
+    const workspaces = await prisma.user.findUnique({
       where: {
         clerkid: user.id,
       },
